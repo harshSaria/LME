@@ -13,7 +13,7 @@ rho_ch4=2;
 mu_ch4=3;
 
 % material property
-a_rough=0.00001;
+a_rough = 0.03e-3;
 
 % geometric parameters (m)
 hole_dia=2e-3;
@@ -37,7 +37,7 @@ Re1=rho_lox*v1*2*d1/mu_lox;
 f1=friction_factor(Re1,r_rough);
 
 delta_P1=f1.*l1.*v1.*v1./(2*9.81*2*d1);
-cd1=mdot_lox./(a1*sqrt(2*rho_lox*delta_P1*0.1));
+cd1=mdot_lox./(a1.*sqrt(2*rho_lox*delta_P1.*0.1.*10^6));
 
 a2=3.14*d2*d2;
 v2=mdot_lox/(a2*rho_lox);
@@ -46,15 +46,24 @@ Re2=rho_lox*v2*2*d2/mu_lox;
 f2=friction_factor(Re2,r_rough);
 
 delta_P2=f2.*l2.*v2.*v2./(2*9.81*2*d2);
-cd2=mdot_lox./(a2*sqrt(2*rho_lox*delta_P2*0.1));
+cd2=mdot_lox./(a2*sqrt(2*rho_lox.*delta_P2.*0.1.*10^6));
 
-total_delP_lox=delta_P2+delta_P1;
+total_delP_lox=delta_P2+delta_P1; % using friction factor formula
 total_cd_lox=cd1+cd2;
 
+% using simple formula mdot=cd*A*sqrt(2*rho*delP)
+cdguess=1;
+delp1=((mdot_lox./a1).^2)./(cdguess*2*rho_lox*10^5);
+delp2=((mdot_lox./a2).^2)./(cdguess*2*rho_lox*10^5);
+tot_delP = delp1+delp2;
+
+diff = total_cd_lox-tot_delP; % difference between delta P value from two method
+
 function f = friction_factor(Re, r_rough)
-% f=(-2.*log((r_rough./3.7)-(5.02./Re).*log(r_rough-(5.02./Re).*((r_rough./3.7)+(13./Re))))).^(-2);
-% f=(-1.8.*log((r_rough./3.7).^1.11 + (6.9./Re))).^(-2);
-% f=(1.14-2.*log(r_rough+(21.25./Re.^0.9))).^(-2);
-f=(-2.*log((r_rough./3.7)+(5.74./Re.^0.9))).^(-2);
+f=(-2.*log10((r_rough./3.7)-(5.02./Re).*log10(r_rough-(5.02./Re).*((r_rough./3.7)+(13./Re))))).^(-2);
+% f=(-1.8.*log10((r_rough./3.7).^1.11 + (6.9./Re))).^(-2);
+% f=(1.14-2.*log10(r_rough+(21.25./Re.^0.9))).^(-2);
+% f=(-2.*log10((r_rough./3.7)+(5.74./Re.^0.9))).^(-2);
 end
+
 
